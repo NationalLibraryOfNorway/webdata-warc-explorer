@@ -3,6 +3,8 @@ A tiny client-side web application for exploring WARC files and records in a bro
 
 Usage does not require installation. All processing happens locally, so that no data leaves your machine.
 
+![Screenshot of WARC Explorer](/docs/warc-explorer-screenshot.png)
+
 ## Requirements
 A browser
 One or more WARC files
