@@ -12,10 +12,11 @@ Download source code:
 
 To start the application:
 - Open the **app** folder,
-- Open "index.html" in your browser.
+- Open **index.html** in your browser.
 
 ## Usage
-The interface is designed to be simple, fast and intuitive. However, for anyone who are new to WARC files, there will be many new concepts. If you find yourself lost, try to follow this guide  to get started.
+The interface is designed to be simple, fast and intuitive. Still, for anyone who are new to WARC files, there will be many new concepts.
+If you find yourself lost, try to follow the guide to get started.
 
 ### Choose folder / file to explore
 Press the "Choose folder" button in the upper left to choose a folder with WARC files.
