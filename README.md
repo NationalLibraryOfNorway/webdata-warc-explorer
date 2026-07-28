@@ -6,9 +6,13 @@ Usage does not require installation. All processing happens locally, so that no 
 ![Screenshot of WARC Explorer](/docs/warc-explorer-screenshot.png)
 
 ## Getting started
-Download the source files.
+Download source code:
+- Download the [latest release](https://github.com/joncto/warc-explorer/releases/latest).
+- Unzip the file
 
-To start the application, open "index.html" in your browser.
+To start the application:
+- Open the **app** folder,
+- Open "index.html" in your browser.
 
 ## Usage
 The interface is designed to be simple, fast and intuitive. However, for anyone who are new to WARC files, there will be many new concepts. If you find yourself lost, try to follow this guide  to get started.
