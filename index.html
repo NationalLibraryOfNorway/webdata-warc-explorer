@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>WARC Explorer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <div class="titlebar">
+    <div>WARC Explorer <span class="hint">— Browse WARC files and records in your browser. Only local processing, no data leaves your machine.</span></div>
+    <div class="hint" id="engineInfo"></div>
+  </div>
+
+  <div class="panes" id="panes">
+
+    <div class="pane" id="pane-files">
+      <div class="pane-header">
+        <span>Select a WARC file</span>
+        <div class="file-actions">
+          <button id="btnChooseFolder" title="Pick a folder to browse for .warc / .warc.gz files">📂 Choose folder…</button>
+          <button id="btnChooseFiles" title="Pick one or more .warc / .warc.gz files directly">🗃️ Choose files…</button>
+        </div>
+      </div>
+      <div class="tree" id="fileTree">
+        <div class="empty-hint">
+          Click 📂 <b>Choose folder…</b> to browse a directory for WARC files, or
+          🗃️<b>Choose files…</b> to pick specific files. You can also drag &amp; drop
+          .warc / .warc.gz files here.
+        </div>
+      </div>
+      <input type="file" id="folderInput" webkitdirectory multiple hidden>
+      <input type="file" id="filesInput" accept=".warc,.warc.gz,.gz" multiple hidden>
+    </div>
+
+    <div class="resizer" id="resizer1"></div>
+
+    <div class="pane" id="pane-records">
+      <div class="pane-header">
+        <span id="currentFileLabel">No file selected</span>
+      </div>
+      <div class="records-toolbar">
+        <input type="search" id="searchInput" placeholder="Search URI, domain, or Record-ID…" disabled>
+        <div class="type-chips" id="typeChips"></div>
+        <span id="recordsCountInline" class="records-count"></span>
+      </div>
+      <div class="record-list-viewport" id="recordViewport">
+        <div class="record-list-spacer" id="recordSpacer"></div>
+      </div>
+    </div>
+
+    <div class="resizer" id="resizer2"></div>
+
+    <div class="pane" id="pane-details">
+      <div class="details-split">
+        <div class="details-top">
+          <div class="pane-header"><span>WARC Header</span></div>
+          <textarea class="viewer" id="headerView" readonly placeholder="Select a record to see its WARC header…"></textarea>
+        </div>
+        <div class="details-resizer" id="resizer3"></div>
+        <div class="details-middle">
+          <div class="pane-header"><span>HTTP Header</span></div>
+          <textarea class="viewer" id="httpHeaderView" readonly placeholder="Select a record to see its embedded HTTP header (response/request/revisit records only)…"></textarea>
+        </div>
+        <div class="details-resizer" id="resizer4"></div>
+        <div class="details-bottom">
+          <div class="pane-header">
+            <span>WARC Content (HTTP Payload)</span>
+            <div class="header-actions">
+              <span id="payloadMeta" class="hint"></span>
+              <button id="btnOpenNewTab" title="Open this payload in a new browser tab" disabled>View in new tab ▶</button>
+            </div>
+          </div>
+          <textarea class="viewer" id="payloadView" readonly placeholder="Select a record to see its payload…"></textarea>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="statusbar">
+    <span id="statusLeft">Ready</span>
+    <span id="statusRight"></span>
+  </div>
+
+</div>
+
+<!-- warcio.min.js is a bundled version of Webrecorder's warcio.js
+ (https://github.com/webrecorder/warcio.js) used for streaming
+ Web ARChive (WARC) files and records. -->
+<script src="warcio.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
