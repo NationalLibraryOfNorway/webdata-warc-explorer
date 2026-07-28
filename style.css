@@ -1,0 +1,361 @@
+/* stylesheet for WARC Explorer - Web Edition */
+
+:root {
+  --border: #c9c9c9;
+  --bg-panel: #f4f4f4;
+  --bg-app: #ececec;
+  --text: #1d1d1d;
+  --accent: #2563eb;
+  --accent-fg: #ffffff;
+  --mono: "SF Mono", "Consolas", "Menlo", monospace;
+  --row-height: 22px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg-app);
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.titlebar {
+  padding: 6px 12px;
+  color: #010101;
+  font-weight: 800;
+  background: #dcdcdc;
+  border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.titlebar .hint {
+  font-weight: 400;
+  color: #555;
+}
+
+.panes {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+}
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 120px;
+  background: var(--bg-panel);
+  overflow: hidden;
+}
+
+.pane + .pane {
+  border-left: 1px solid var(--border);
+}
+
+#pane-files { flex: 0 0 300px; }
+#pane-records { flex: 0 0 380px; }
+#pane-details { flex: 1 1 auto; display: flex; flex-direction: column; }
+
+.resizer {
+  flex: 0 0 5px;
+  cursor: col-resize;
+  background: transparent;
+}
+.resizer:hover, .resizer.active {
+  background: var(--accent);
+  opacity: 0.4;
+}
+
+.pane-header {
+  padding: 6px 8px;
+  font-size: 12px;
+  color: #444;
+  border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.pane-header button {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border: 1px solid #b7b7b7;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+}
+.pane-header button:hover { background: #f0f0f0; }
+.pane-header button:disabled {
+  cursor: default;
+  opacity: 0.45;
+  background: #f4f4f4;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.file-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.tree, .record-list-viewport {
+  flex: 1 1 auto;
+  overflow: auto;
+  background: #fff;
+}
+
+.tree { padding: 4px 0; }
+
+.tree-node { user-select: none; }
+
+.tree-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px 2px 0;
+  white-space: nowrap;
+  cursor: default;
+  line-height: 20px;
+}
+
+.tree-row.folder { cursor: pointer; }
+.tree-row.file { cursor: pointer; }
+.tree-row.file.selected { background: var(--accent); color: var(--accent-fg); }
+.tree-row:hover:not(.selected) { background: #eef2ff; }
+
+/* Belt-and-suspenders: labels are already middle-truncated in JS (see
+   truncateMiddle in app.js), but this keeps things tidy if a pane is
+   resized narrower than that truncation anticipated. */
+.tree-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tree-children { display: none; }
+.tree-children.open { display: block; }
+
+.twisty {
+  width: 14px;
+  display: inline-block;
+  text-align: center;
+  font-size: 10px;
+  color: #777;
+}
+
+.empty-hint {
+  padding: 16px 10px;
+  color: #777;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* --- records toolbar: search + type filter chips ------------------------ */
+
+.records-toolbar {
+  flex: 0 0 auto;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#searchInput {
+  width: 100%;
+  padding: 4px 8px;
+  font-size: 12px;
+  border: 1px solid #b7b7b7;
+  border-radius: 4px;
+  background: #fff;
+}
+#searchInput:disabled { background: #eee; color: #999; }
+
+.type-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.chip {
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid #b7b7b7;
+  border-radius: 999px;
+  background: #fff;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.chip:hover { background: #f0f0f0; }
+.chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+}
+.chip .count { opacity: 0.75; margin-left: 3px; }
+
+.records-count {
+  font-size: 11px;
+  color: #666;
+  min-height: 14px; /* reserve space so the toolbar doesn't jump when it appears/disappears */
+}
+
+.record-list-viewport {
+  position: relative;
+}
+
+.record-list-spacer {
+  position: relative;
+  width: 100%;
+}
+
+.record-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: var(--row-height);
+  line-height: var(--row-height);
+  padding: 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+  font-size: 12.5px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.record-row:hover { background: #eef2ff; }
+.record-row.selected { background: var(--accent); color: var(--accent-fg); }
+
+.record-row .rtype-response { color: #0a7d2c; font-weight: 600; }
+.record-row .rtype-request { color: #b25f00; font-weight: 600; }
+.record-row .rtype-other { color: #555; font-weight: 600; }
+.record-row.selected .rtype-response,
+.record-row.selected .rtype-request,
+.record-row.selected .rtype-other { color: inherit; }
+
+.no-results-hint {
+  padding: 16px 10px;
+  color: #777;
+  font-size: 12px;
+}
+
+.details-split {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Three stacked sections now: WARC Header / HTTP Header / Payload.
+   Payload gets double the default room since it's usually the main
+   thing being inspected; all three are freely resizable via their
+   own drag handles regardless of this starting ratio. */
+.details-top, .details-middle {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.details-bottom {
+  flex: 2 1 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.details-resizer {
+  flex: 0 0 5px;
+  cursor: row-resize;
+}
+.details-resizer:hover, .details-resizer.active {
+  background: var(--accent);
+  opacity: 0.4;
+}
+
+textarea.viewer {
+  flex: 1 1 auto;
+  width: 100%;
+  border: 0;
+  resize: none;
+  padding: 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.5;
+  background: #fff;
+  color: #111;
+  white-space: pre;
+  overflow: auto;
+}
+
+.statusbar {
+  flex: 0 0 auto;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  color: #555;
+  background: #dcdcdc;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: #e2e2e2;
+  font-size: 11px;
+  margin-left: 6px;
+}
+
+.dragover {
+  outline: 2px dashed var(--accent);
+  outline-offset: -4px;
+}
+
+.spinner {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #ccc;
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* --- keyboard accessibility: make focus visible on the interactive
+   record list, without adding any decoration when it's not focused --- */
+#recordViewport:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+#recordViewport:focus:not(:focus-visible) {
+  outline: none;
+}
+#recordViewport:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
