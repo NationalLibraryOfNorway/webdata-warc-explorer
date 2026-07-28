@@ -37,4 +37,5 @@ All records with an HTTP payload ca be opened in a new tab in your browser, allo
 
 ## Credits
 WARC parsing is done with a bundled version of Webrecorder's [warcio.js](https://github.com/webrecorder/warcio.js).
+
 The interface is inspired by [Warchaeology](https://github.com/NationalLibraryOfNorway/warchaeology)'s CLI console.
