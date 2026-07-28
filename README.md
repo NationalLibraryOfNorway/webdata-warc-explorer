@@ -5,10 +5,6 @@ Usage does not require installation. All processing happens locally, so that no 
 
 ![Screenshot of WARC Explorer](/docs/warc-explorer-screenshot.png)
 
-## Requirements
-A browser
-One or more WARC files
-
 ## Getting started
 Download the source files.
 
