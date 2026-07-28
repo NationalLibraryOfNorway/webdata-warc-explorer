@@ -5,10 +5,6 @@ Usage does not require installation. All processing happens locally, so that no 
 
 ![Screenshot of WARC Explorer](/docs/warc-explorer-screenshot.png)
 
-## Requirements
-A browser
-One or more WARC files
-
 ## Getting started
 Download the source files.
 
@@ -37,4 +33,5 @@ All records with an HTTP payload ca be opened in a new tab in your browser, allo
 
 ## Credits
 WARC parsing is done with a bundled version of Webrecorder's [warcio.js](https://github.com/webrecorder/warcio.js).
+
 The interface is inspired by [Warchaeology](https://github.com/NationalLibraryOfNorway/warchaeology)'s CLI console.
