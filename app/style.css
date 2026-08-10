@@ -143,14 +143,15 @@ html, body {
    truncateMiddle in app.js), but this keeps things tidy if a pane is
    resized narrower than that truncation anticipated. */
 .tree-label {
-  flex: 1 1 auto;
+  flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tree-children { display: none; }
-.tree-children.open { display: block; }
+.tree-children.open { display: block; margin-left: 14px; }
 
 .twisty {
   width: 14px;
