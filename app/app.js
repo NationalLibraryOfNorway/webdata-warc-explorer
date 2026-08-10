@@ -68,7 +68,6 @@
   // DOM references
   // ---------------------------------------------------------------
   const els = {
-    engineInfo: document.getElementById("engineInfo"),
     fileTree: document.getElementById("fileTree"),
     btnChooseFolder: document.getElementById("btnChooseFolder"),
     btnChooseFiles: document.getElementById("btnChooseFiles"),
@@ -171,11 +170,6 @@
   function yieldToUI() {
     return new Promise((resolve) => setTimeout(resolve, 0));
   }
-
-  els.engineInfo.textContent =
-    typeof DecompressionStream !== "undefined"
-      ? "Native gzip decoding"
-      : "JS gzip fallback (pako)";
 
   // ---------------------------------------------------------------
   // File tree model & rendering

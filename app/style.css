@@ -46,6 +46,26 @@ html, body {
   color: #555;
 }
 
+.titlebar-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.gh-link {
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.gh-link:hover {
+  opacity: 0.7;
+  text-decoration: underline;
+}
+
 .panes {
   flex: 1 1 auto;
   display: flex;
