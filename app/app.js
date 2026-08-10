@@ -229,7 +229,7 @@
       row.appendChild(twisty);
       const label = document.createElement("span");
       label.className = "tree-label";
-      label.textContent = "📂 " + truncateMiddle(node.name, TREE_LABEL_MAX);
+      label.textContent = "📂 " + node.name;
       label.title = node.name;
       row.appendChild(label);
       row.addEventListener("click", () => {
@@ -247,7 +247,7 @@
       row.appendChild(twisty); // keeps files aligned under relevant folder
       const label = document.createElement("span");
       label.className = "tree-label";
-      label.textContent = "🗃️ " + truncateMiddle(node.name, TREE_LABEL_MAX);
+      label.textContent = "🗃️ " + node.name;
       // Full relative path shown on hover.
       label.title = node.path || node.name;
       row.appendChild(label);

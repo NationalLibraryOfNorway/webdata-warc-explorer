@@ -1,7 +1,7 @@
 # WARC Explorer
 A tiny application for client-side exploration of WARC files and records in a browser.
 
-Built as a webpage, it runs entirely in your browser, so no install is required. All processing happens locally, meaning that no data leaves your machine/system.
+Built as a webpage, the app runs entirely in your browser, so no installation is required. All processing happens locally, meaning that no data leaves your machine/system.
 
 Demo available from [webdata.nb.no/warc-explorer](https://webdata.nb.no/warc-explorer).
 
@@ -22,18 +22,15 @@ Demo available from [webdata.nb.no/warc-explorer](https://webdata.nb.no/warc-exp
 - Navigate to the **app** folder
 - Open **index.html** in your browser
 
-
-
 ## Usage
+WARC Explorer is designed for exploration of WARC files, without requiring any prior knowledge of the WARC format and its specification.
+
 The interface is devided in three vertically separated areas: 
-- The left pane let you choose a folder containing WARC files, and mark a WARC file for exploration.
-- The centre pane displays a list of records contained with the file. On the top, there are also features for searching and filtering the records.
+- The left pane is a file explorer that let you open a folder with WARC files and choose a file to explore.
+- The centre pane display a list of records contained within the file. On the top, there are features for searching and filtering the records.
 - The right pane displays the chosen record's WARC Header, HTTP Header and WARC Content (HTTP payload). The payload can also be opened in a new tab in your browser, allowing closer exploration of text, image, audio, video and code resources.
 
-You also need one or more WARC files to explore. If you do not have your own, try with one 
-
-The interface is designed to be simple, fast and intuitive. Still, for anyone who are new to WARC files, there will be many new concepts.
-If you find yourself lost, try to follow the guide to get started.
+If you find yourself lost, try to follow the guide below.
 
 ### Choose folder / file to explore
 Press the "Choose folder" button in the upper left to choose a folder with WARC files.
@@ -65,8 +62,7 @@ We also appreciate feedback and user-stories, which can be sent to webdata@nb.no
 WARC parsing is done with a bundled version of Webrecorder's [warcio.js](https://github.com/webrecorder/warcio.js).
 
 WARC Explorer is inspired by:
-- common file explorer interfaces,
+- Common file explorer interfaces like Finder/Windows Explorer,
 - [Warchaeology](https://github.com/NationalLibraryOfNorway/warchaeology)'s CLI console,
+- A python-based prototype for a [desktop application](https://github.com/joncto/warc-explorer-desktop).
 - [Johanna Drucker's critical studies of interfaces](https://doi.org/10.63744/d9h2c6cvq8jc) for humanistic research.
-
-The web application builds on a previous [prototype for a python-based desktop application](https://github.com/joncto/warc-explorer-desktop).
