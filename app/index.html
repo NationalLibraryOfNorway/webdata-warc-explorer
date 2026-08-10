@@ -4,9 +4,25 @@
 <meta charset="UTF-8">
 <title>WARC Explorer</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Browse WARC files and records directly in your browser. No upload, no installation, no prior knowledge needed.">
+<meta property="og:title" content="WARC Explorer">
+<meta property="og:description" content="Browse WARC files and records directly in your browser. No upload, no installation, no prior knowledge needed.">
+<meta property="og:url" content="https://webdata.nb.no/warc-explorer">
+<meta property="og:type" content="website">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+  <!-- WARC Explorer v.0.8.6
+  WARC Explorer is a single-page application for browsing WARC files and records entirely in the browser.
+  No installation needed. All processing is done client-side, so no data leaves your machine.
+  - index.html and style.css holds the GUI,
+  - app.js reads and processes WARC with the help of warcio.min.js,
+  a bundled version of WebRecorder's warcio.js (https://github.com/webrecorder/warcio.js).
+
+  Source code available from https://www.github.com/NationalLibraryofNorway/webdata-warc-explorer.
+  -->
+
 <div class="app">
 
   <div class="titlebar">
@@ -100,9 +116,7 @@
 
 </div>
 
-<!-- warcio.min.js is a bundled version of Webrecorder's warcio.js
- (https://github.com/webrecorder/warcio.js) used for streaming
- Web ARChive (WARC) files and records. -->
+<!-- read, stream and process WARCs -->
 <script src="warcio.min.js"></script>
 <script src="app.js"></script>
 </body>
