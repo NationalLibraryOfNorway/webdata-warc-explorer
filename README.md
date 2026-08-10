@@ -8,9 +8,9 @@ Demo available from [webdata.nb.no/warc-explorer](https://webdata.nb.no/warc-exp
 ![Screenshot of WARC Explorer](/docs/warc-explorer-screenshot.png)
 
 ## Requirements
-- Your favorite web browser
+- A web browser
 - A WARC file
-    - (If you do not have your own WARC files, [download one of ours](https://github.com/NationalLibraryOfNorway/webdata-warc-explorer/tree/main/warcs) for testing.
+    - (If you do not have a WARC file, [download one of ours](https://github.com/NationalLibraryOfNorway/webdata-warc-explorer/tree/main/warcs) for testing.
 
 ## Getting started
 
