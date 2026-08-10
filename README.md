@@ -1,20 +1,37 @@
 # WARC Explorer
-A tiny web application for client-side exploration of WARC files and records in a browser.
+A tiny application for client-side exploration of WARC files and records in a browser.
 
-Usage does not require installation, only opening `index.html` in a browser. All processing happens locally, so that no data leaves your machine/system.
+Built as a webpage, it runs entirely in your browser, so no install is required. All processing happens locally, meaning that no data leaves your machine/system.
+
+Demo available from [webdata.nb.no/warc-explorer](https://webdata.nb.no/warc-explorer).
 
 ![Screenshot of WARC Explorer](/docs/warc-explorer-screenshot.png)
 
+## Requirements
+- Your favorite web browser
+- A WARC file
+    - (If you do not have your own WARC files, [download one of ours](https://github.com/NationalLibraryOfNorway/webdata-warc-explorer/tree/main/warcs) for testing.
+
 ## Getting started
-Download source code:
-- Download the [latest release](https://github.com/joncto/warc-explorer/releases/latest).
+
+### Download source code:
+- Download the [latest release](https://github.com/NationalLibraryOfNorway/webdata-warc-explorer/releases/latest)
 - Unzip the file
 
-To start the application:
-- Open the **app** folder,
-- Open **index.html** in your browser.
+### Start the application:
+- Navigate to the **app** folder
+- Open **index.html** in your browser
+
+
 
 ## Usage
+The interface is devided in three vertically separated areas: 
+- The left pane let you choose a folder containing WARC files, and mark a WARC file for exploration.
+- The centre pane displays a list of records contained with the file. On the top, there are also features for searching and filtering the records.
+- The right pane displays the chosen record's WARC Header, HTTP Header and WARC Content (HTTP payload). The payload can also be opened in a new tab in your browser, allowing closer exploration of text, image, audio, video and code resources.
+
+You also need one or more WARC files to explore. If you do not have your own, try with one 
+
 The interface is designed to be simple, fast and intuitive. Still, for anyone who are new to WARC files, there will be many new concepts.
 If you find yourself lost, try to follow the guide to get started.
 
@@ -35,11 +52,21 @@ To inspect the headers and content of a resource, choose it from the centre pane
 All records with an HTTP payload ca be opened in a new tab in your browser, allowing you to represent it as a web resource.
 
 ## Feedback
-Please report bugs or problems by committing an issue: describe what you expect to happen, what actually happens, and some contextual information about the WARC files and browser version. If you know how to fix the problem, feel free to commit a pull requests.
+Please report bugs or problems by committing an issue, describing:
+- what you do,
+- what you expect to happen,
+- what actually happens.
+
+Please, add some contextual information about the WARC file and your browser version. If you know how to fix the problem, feel free to commit a pull requests related to the issue.
 
 We also appreciate feedback and user-stories, which can be sent to webdata@nb.no.
 
 ## Credits
 WARC parsing is done with a bundled version of Webrecorder's [warcio.js](https://github.com/webrecorder/warcio.js).
 
-The layout is inspired by common file explorer interfaces and [Warchaeology](https://github.com/NationalLibraryOfNorway/warchaeology)'s CLI console.
+WARC Explorer is inspired by:
+- common file explorer interfaces,
+- [Warchaeology](https://github.com/NationalLibraryOfNorway/warchaeology)'s CLI console,
+- [Johanna Drucker's critical studies of interfaces](https://doi.org/10.63744/d9h2c6cvq8jc) for humanistic research.
+
+The web application builds on a previous [prototype for a python-based desktop application](https://github.com/joncto/warc-explorer-desktop).
