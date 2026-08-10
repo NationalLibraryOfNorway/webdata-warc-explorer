@@ -193,7 +193,7 @@
     container.innerHTML = "";
     if (state.treeRoot.children.size === 0) {
       container.innerHTML =
-        '<div class="empty-hint">📂 <b>Choose folder…</b> to browse a directory for WARC files. <br><br> 🗃️ <b>Choose files…</b> to pick specific files.</div>';
+        '<div class="empty-hint">Huge WARC repositories may take some time to index. <br><br>Please be patient while folders and files are loading... ⏳</div>';
       return;
     }
     container.appendChild(renderTreeChildren(state.treeRoot));
