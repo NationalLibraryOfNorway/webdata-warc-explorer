@@ -3,7 +3,7 @@ A tiny application for client-side exploration of WARC files and records in a br
 
 Built as a webpage, the app runs entirely in your browser, so no installation is required. All processing happens locally, meaning that no data leaves your machine/system.
 
-Demo available from [webdata.nb.no/warc-explorer](https://webdata.nb.no/warc-explorer).
+Demo available from [webdata.nb.no/warc-explorer](https://webdata.nb.no/warc-explorer/).
 
 ![Screenshot of WARC Explorer](/docs/warc-explorer-screenshot.png)
 
