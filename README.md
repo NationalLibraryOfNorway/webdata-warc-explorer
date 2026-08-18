@@ -50,6 +50,15 @@ To inspect the headers and content of a resource, choose it from the centre pane
 
 All records with an HTTP payload ca be opened in a new tab in your browser, allowing you to represent it as a web resource.
 
+### Linking to remotely hosted WARC files
+Remote WARC URLs can be supplied as repeated `warc` parameters in the page URL fragment:
+
+```text
+index.html#warc=https://example.com/one.warc.gz&warc=https://example.com/two.warc.gz
+```
+
+The remote server must allow cross-origin requests and HTTP byte-range requests.
+
 ## Feedback
 Please report bugs or problems by committing an issue, describing:
 - what you do,

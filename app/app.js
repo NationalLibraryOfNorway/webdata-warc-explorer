@@ -171,6 +171,32 @@
     return new Promise((resolve) => setTimeout(resolve, 0));
   }
 
+  async function openWarcStream(file, start, end) {
+    if (file instanceof Blob) {
+      return start == null ? file.stream() : file.slice(start, end).stream();
+    }
+
+    const response = await fetch(file.url, {
+      headers: start != null ? { Range: `bytes=${start}-${end - 1}` } : {},
+    });
+
+    if (!response.ok) throw new Error(`HTTP ${response.status} loading ${file.url}`);
+    if (start != null && response.status !== 206) {
+      throw new Error(`Server did not honor the byte-range request for ${file.url}`);
+    }
+    if (!response.body) throw new Error(`Response has no body: ${file.url}`);
+    return response.body;
+  }
+
+  function addRemoteWarcsFromFragment() {
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    for (const value of params.getAll("warc")) {
+      const url = new URL(value, window.location.href);
+      const name = decodeURIComponent(url.pathname.split("/").pop()) || url;
+      addFileToTree({ url: url.href }, name);
+    }
+  }
+
   // ---------------------------------------------------------------
   // File tree model & rendering
   // ---------------------------------------------------------------
@@ -315,7 +341,7 @@
   // ---------------------------------------------------------------
   async function indexWarcFile(file, onProgress) {
     const records = [];
-    const parser = new warcio.WARCParser(file.stream(), {
+    const parser = new warcio.WARCParser(await openWarcStream(file), {
       keepHeadersCase: true,
       parseHttp: false, // not needed for the list; keeps the first pass fast
     });
@@ -634,8 +660,8 @@
   }
 
   async function loadRecordDetail(file, meta) {
-    const slice = file.slice(meta.offset, meta.offset + meta.length);
-    const parser = new warcio.WARCParser(slice.stream(), { keepHeadersCase: true, parseHttp: true });
+    const stream = await openWarcStream(file, meta.offset, meta.offset + meta.length);
+    const parser = new warcio.WARCParser(stream, { keepHeadersCase: true, parseHttp: true });
     const record = await parser.parse();
     if (!record) throw new Error(`Could not re-parse record at offset ${meta.offset}`);
 
@@ -892,6 +918,7 @@
   // ---------------------------------------------------------------
   // Init
   // ---------------------------------------------------------------
+  addRemoteWarcsFromFragment();
   renderTree();
   renderRecordWindow();
   setStatus("Ready", false);
