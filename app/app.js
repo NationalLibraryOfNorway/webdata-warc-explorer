@@ -1,14 +1,27 @@
 /*!
   WARC Explorer (v0.8.4)
   ----------------------------------------------------------------
-  A tiny client-side web application for exploring WARC files in a
-  browser. No uploading, no installation, no command-line. Just
-  open "index.html" in your browser and explore your WARC files.
+  A tiny client-side web application for exploring WARC and ARC
+  files in a browser. No uploading, no installation, no
+  command-line. Just open "index.html" in your browser and explore
+  your files.
   
   The app is inspired by Warchaeology's console
   (https://github.com/NationalLibraryOfNorway/warchaeology).
   Parsing of WARC is done with a bundled version of Webrecorder's
-  warcio.js (https://github.com/webrecorder/warcio.js). 
+  warcio.js (https://github.com/webrecorder/warcio.js).
+
+  ARC support (added separately, see "ARC file support" below):
+  warcio.js has no ARC parsing of its own
+  (https://github.com/webrecorder/warcio.js/issues/5), so .arc /
+  .arc.gz files are read with a small hand-rolled parser instead.
+  ARC is the older, pre-WARC container format: each record is just
+  one plain-text header line (URL, IP, date, content-type, length,
+  ...) directly followed by the raw captured HTTP response bytes —
+  there's no WARC-style header block and no request/warcinfo/
+  metadata record types, only response-like captures (plus a
+  special "filedesc://" record describing the file itself, and
+  occasionally inline "dns:" lookups).
   
   If you want to ensure that all WARC content is kept safe,
   just download the source files and open "index.html" in your
@@ -79,6 +92,7 @@
     recordsCountInline: document.getElementById("recordsCountInline"),
     recordViewport: document.getElementById("recordViewport"),
     recordSpacer: document.getElementById("recordSpacer"),
+    headerPaneLabel: document.getElementById("headerPaneLabel"),
     headerView: document.getElementById("headerView"),
     httpHeaderView: document.getElementById("httpHeaderView"),
     payloadView: document.getElementById("payloadView"),
@@ -117,12 +131,17 @@
     conversion: "Content that was converted from another format during processing.",
     continuation: "Continues a large payload that has been split across multiple records.",
     unknown: "Record type was missing or not recognized when written.",
+    // ARC-specific pseudo-types (ARC has no WARC-Type field; these are
+    // inferred from the record's URL, see indexArcFile below).
+    filedesc: "ARC-specific: describes the ARC file itself (version, field layout). Plays the same role as a WARC's warcinfo record.",
+    dns: "ARC-specific: a captured DNS lookup, stored inline as its own entry.",
   };
 
   const state = {
     treeRoot: { name: "", type: "dir", children: new Map(), open: true },
     currentFile: null,
     currentFileName: "",
+    currentFileKind: "warc", // "warc" | "arc" — which parser drives pass 2
     records: [], // full index for the current file (pass 1 results)
     visible: [], // visible subset of records based on filtration and search
     typesPresent: [], // WARC-Type values found in this file
@@ -144,6 +163,15 @@
   function isWarcName(name) {
     const lower = name.toLowerCase();
     return lower.endsWith(".warc") || lower.endsWith(".warc.gz");
+  }
+
+  function isArcName(name) {
+    const lower = name.toLowerCase();
+    return lower.endsWith(".arc") || lower.endsWith(".arc.gz");
+  }
+
+  function isArchiveName(name) {
+    return isWarcName(name) || isArcName(name);
   }
 
   function setStatus(left, busy) {
@@ -193,7 +221,7 @@
     container.innerHTML = "";
     if (state.treeRoot.children.size === 0) {
       container.innerHTML =
-        '<div class="empty-hint">Huge WARC repositories may take some time to index. <br><br>Please be patient while folders and files are loading... ⏳</div>';
+        '<div class="empty-hint">Huge WARC/ARC repositories may take some time to index. <br><br>Please be patient while folders and files are loading... ⏳</div>';
       return;
     }
     container.appendChild(renderTreeChildren(state.treeRoot));
@@ -255,7 +283,7 @@
   async function selectFileNode(node) {
     state.selectedFileNode = node;
     renderTree();
-    await loadWarcFile(node.file, node.name);
+    await loadArchiveFile(node.file, node.name);
   }
 
   // ---------------------------------------------------------------
@@ -265,14 +293,14 @@
   els.btnChooseFiles.addEventListener("click", () => els.filesInput.click());
 
   els.folderInput.addEventListener("change", (e) => {
-    const files = [...e.target.files].filter((f) => isWarcName(f.webkitRelativePath || f.name));
+    const files = [...e.target.files].filter((f) => isArchiveName(f.webkitRelativePath || f.name));
     for (const f of files) addFileToTree(f, f.webkitRelativePath || f.name);
     if (files.length) renderTree();
     els.folderInput.value = "";
   });
 
   els.filesInput.addEventListener("change", (e) => {
-    const files = [...e.target.files].filter((f) => isWarcName(f.name));
+    const files = [...e.target.files].filter((f) => isArchiveName(f.name));
     for (const f of files) addFileToTree(f, f.name);
     if (files.length) renderTree();
     els.filesInput.value = "";
@@ -340,9 +368,288 @@
     return records;
   }
 
-  async function loadWarcFile(file, displayName) {
+  // ---------------------------------------------------------------
+  // ARC file support
+  // ---------------------------------------------------------------
+  // ARC records have no WARC-style header block: each record is a
+  // single header line
+  //
+  //   URL IP-address Archive-date Content-type Archive-length
+  //
+  // (older/Heritrix-style ARCs use a 10-field line instead, adding
+  //  Result-code, Checksum, Location, Offset and Filename before the
+  //  final length field — both layouts are handled generically below
+  //  by only relying on "first field = URL" and "last field = length")
+  //
+  // ...immediately followed by exactly `Archive-length` bytes of raw
+  // HTTP response (status line + headers + body), then a single "\n"
+  // record separator before the next header line.
+  //
+  // Compressed .arc.gz files use the same "one gzip member per
+  // record" convention as .warc.gz. The browser's native
+  // DecompressionStream rejects concatenated gzip members, but
+  // warcio.js exposes its pako-backed AsyncIterReader, which handles
+  // them by starting a new inflator for each member.
+  //
+  // Pass 1 streams the decompressed records without retaining their
+  // bodies and records each gzip member's compressed byte range. Pass
+  // 2 then slices and decompresses only the selected member. This
+  // relies on the standard ARC.GZ layout of one gzip member per ARC
+  // record and keeps memory proportional to one record rather than the
+  // entire decompressed archive.
+
+  // Consumes an optional LF or CRLF separator after an ARC record and
+  // returns any probed bytes that instead belong to the next header.
+  async function skipArcRecordSeparator(reader) {
+    const first = await reader.readSize(1);
+    if (first.length === 0 || first[0] === 10) return new Uint8Array(0);
+    if (first[0] !== 13) return first;
+
+    const second = await reader.readSize(1);
+    if (second.length === 0) return first;
+    if (second[0] !== 10) return new Uint8Array([first[0], second[0]]);
+    return new Uint8Array(0);
+  }
+
+  function decodeLatin1(bytes) {
+    return new TextDecoder("windows-1252").decode(bytes);
+  }
+
+  // ---------------------------------------------------------------
+  // Pass 1 (ARC): walks every record's header line + skips its body,
+  // exactly mirroring indexWarcFile()'s role for WARC files.
+  // ---------------------------------------------------------------
+  async function indexArcFile(reader, onProgress) {
+    const records = [];
+    let i = 0;
+    const isCompressed = !!reader.compressed;
+    let compressedOffset = isCompressed ? reader.getRawOffset() : null;
+    let headerPrefix = new Uint8Array(0);
+
+    while (true) {
+      const startOffset = reader.getReadOffset() - headerPrefix.length;
+      const nextLineBytes = await reader.readlineRaw();
+      if (nextLineBytes === null && headerPrefix.length === 0) break;
+      const lineBytes = headerPrefix.length === 0
+        ? nextLineBytes
+        : warcio.concatChunks(
+            nextLineBytes ? [headerPrefix, nextLineBytes] : [headerPrefix],
+            headerPrefix.length + (nextLineBytes ? nextLineBytes.length : 0)
+          );
+      headerPrefix = new Uint8Array(0);
+
+      const trimmed = decodeLatin1(lineBytes).trim();
+      if (!trimmed) continue; // tolerate stray blank lines between records
+
+      const fields = trimmed.split(/\s+/);
+      const length = parseInt(fields[fields.length - 1], 10);
+      if (fields.length < 4 || !Number.isFinite(length) || length < 0) {
+        if (i === 0) {
+          throw new Error("This doesn't look like a valid ARC file (unrecognized first record header line).");
+        }
+        break; // stop rather than risk mis-parsing the remainder of the file
+      }
+
+      const url = fields[0];
+      const bodyOffset = reader.getReadOffset();
+      const skipped = await reader.skipSize(length);
+      if (skipped !== length) {
+        throw new Error("Unexpected end of ARC file while reading a record body.");
+      }
+      const rawOffsetAfterBody = isCompressed ? reader.getRawOffset() : null;
+      headerPrefix = await skipArcRecordSeparator(reader);
+
+      let compressedLength = null;
+      if (isCompressed) {
+        const compressedEnd = headerPrefix.length > 0
+          ? rawOffsetAfterBody
+          : reader.getRawOffset();
+        compressedLength = compressedEnd - compressedOffset;
+        if (compressedLength <= 0) {
+          throw new Error("This .arc.gz does not use one gzip member per ARC record.");
+        }
+      }
+
+      const lowerUrl = url.toLowerCase();
+      const type = lowerUrl.startsWith("filedesc://") ? "filedesc" : lowerUrl.startsWith("dns:") ? "dns" : "response";
+
+      records.push({
+        index: i,
+        type,
+        uri: url,
+        recordId: "",
+        headerLine: trimmed,
+        declaredContentType: fields[3] || null,
+        offset: startOffset,
+        bodyOffset,
+        bodyOffsetInMember: bodyOffset - startOffset,
+        length,
+        compressedOffset,
+        compressedLength,
+      });
+      if (isCompressed) compressedOffset += compressedLength;
+      i++;
+      if (i % 250 === 0) {
+        onProgress && onProgress(i);
+        await yieldToUI();
+      }
+    }
+    return records;
+  }
+
+  // Returns the raw body bytes for one indexed ARC record. Plain ARC
+  // records can be sliced directly. For ARC.GZ, only the selected
+  // record's gzip member is sliced and decompressed.
+  async function getArcRecordBodyBytes(meta) {
+    if (meta.compressedLength !== null) {
+      const compressed = state.currentFile.slice(
+        meta.compressedOffset,
+        meta.compressedOffset + meta.compressedLength
+      );
+      const reader = new warcio.AsyncIterReader(compressed.stream(), "gzip");
+      const member = await reader.readFully();
+      const start = meta.bodyOffsetInMember;
+      if (member.length < start + meta.length) {
+        throw new Error("Unexpected end of compressed ARC record.");
+      }
+      return member.subarray(start, start + meta.length);
+    }
+    const slice = state.currentFile.slice(meta.bodyOffset, meta.bodyOffset + meta.length);
+    return new Uint8Array(await slice.arrayBuffer());
+  }
+
+  // Locates the header/body boundary of a raw HTTP response block
+  // (preferring "\r\n\r\n", falling back to a bare "\n\n").
+  function findHeaderBodyBoundary(bytes) {
+    for (let i = 0; i <= bytes.length - 4; i++) {
+      if (bytes[i] === 13 && bytes[i + 1] === 10 && bytes[i + 2] === 13 && bytes[i + 3] === 10) {
+        return { headerEnd: i, bodyStart: i + 4 };
+      }
+    }
+    for (let i = 0; i <= bytes.length - 2; i++) {
+      if (bytes[i] === 10 && bytes[i + 1] === 10) {
+        return { headerEnd: i, bodyStart: i + 2 };
+      }
+    }
+    return null;
+  }
+
+  // Splits an ARC "response" record's body into its embedded HTTP
+  // status line + headers, and the remaining entity body — the ARC
+  // equivalent of a WARC response record's separate HTTP header block.
+  function splitArcHttpResponse(bytes) {
+    const boundary = findHeaderBodyBoundary(bytes);
+    if (!boundary) return { headers: null, body: bytes };
+
+    const headerText = decodeLatin1(bytes.subarray(0, boundary.headerEnd));
+    const rawLines = headerText.split(/\r\n|\n/);
+    const statusline = (rawLines[0] || "").trim();
+    if (!/^HTTP\/\d/i.test(statusline)) {
+      return { headers: null, body: bytes }; // doesn't look like an HTTP response after all
+    }
+
+    const headerPairs = [];
+    for (let i = 1; i < rawLines.length; i++) {
+      const line = rawLines[i];
+      if (!line) continue;
+      const idx = line.indexOf(":");
+      if (idx === -1) continue;
+      headerPairs.push([line.slice(0, idx).trim(), line.slice(idx + 1).trim()]);
+    }
+
+    return {
+      headers: { statusline, headers: headerPairs },
+      body: bytes.subarray(boundary.bodyStart),
+    };
+  }
+
+  function getArcHeaderCI(pairs, name) {
+    const lower = name.toLowerCase();
+    for (const [k, v] of pairs) {
+      if (k.toLowerCase() === lower) return v;
+    }
+    return null;
+  }
+
+  function buildArcHttpHeaderText(statusline, pairs) {
+    const lines = [];
+    if (statusline) lines.push(statusline);
+    for (const [name, value] of pairs) lines.push(`${name}: ${value}`);
+    return lines.join("\n") || "(empty HTTP header block)";
+  }
+
+  // Builds the text shown in the "Header" pane for an ARC record.
+  // There's no literal WARC-style header block to display, so this
+  // reconstructs a labeled breakdown of the record's single header
+  // line for the two commonly-seen ARC field layouts.
+  function buildArcHeaderText(meta) {
+    const fields = meta.headerLine.split(/\s+/);
+    const labelSets = {
+      5: ["URL", "IP-address", "Archive-date", "Content-type", "Archive-length"],
+      10: ["URL", "IP-address", "Archive-date", "Content-type", "Result-code", "Checksum", "Location", "Offset", "Filename", "Archive-length"],
+    };
+    const labels = labelSets[fields.length];
+    const lines = [
+      "(ARC files have no separate WARC-style header block — this is",
+      " reconstructed from the record's single ARC header line.)",
+      "",
+      `Raw ARC header line: ${meta.headerLine}`,
+      "",
+    ];
+    if (labels) {
+      for (let i = 0; i < fields.length; i++) lines.push(`${labels[i]}: ${fields[i]}`);
+    } else {
+      fields.forEach((f, i) => lines.push(`Field ${i + 1}: ${f}`));
+    }
+    return lines.join("\n");
+  }
+
+  // ---------------------------------------------------------------
+  // Pass 2 (ARC): fetches one record's body on demand and splits it
+  // into HTTP header / payload, mirroring loadRecordDetail() for WARC.
+  // ---------------------------------------------------------------
+  async function loadArcRecordDetail(meta) {
+    const bodyBytes = await getArcRecordBodyBytes(meta);
+
+    let httpHeaders = null;
+    let httpContentType = null;
+    let payloadBytes = bodyBytes;
+
+    if (meta.type === "response") {
+      const split = splitArcHttpResponse(bodyBytes);
+      if (split.headers) {
+        httpHeaders = split.headers;
+        payloadBytes = split.body;
+        httpContentType = getArcHeaderCI(split.headers.headers, "Content-Type");
+      }
+    }
+
+    const httpHeaderText = httpHeaders
+      ? buildArcHttpHeaderText(httpHeaders.statusline, httpHeaders.headers)
+      : meta.type === "response"
+        ? "(This record's body doesn't look like a well-formed HTTP response — showing it as raw content below.)"
+        : `("${meta.type}" ARC records store plain metadata, not a captured HTTP response — there's no HTTP header to show.)`;
+
+    const displayContentType = httpContentType || meta.declaredContentType || null;
+    const { text, note } = decodePayload(payloadBytes, httpContentType);
+
+    const ctLabel = displayContentType || "content-type unknown";
+    const metaNote = `${payloadBytes.length.toLocaleString()} bytes · ${ctLabel}` + (note ? ` · ${note}` : "");
+
+    return {
+      headerText: buildArcHeaderText(meta),
+      httpHeaderText,
+      payloadText: text,
+      metaNote,
+      payloadBytes,
+      httpContentType,
+    };
+  }
+
+  async function loadArchiveFile(file, displayName) {
     state.currentFile = file;
     state.currentFileName = displayName;
+    state.currentFileKind = isArcName(displayName) ? "arc" : "warc";
     state.records = [];
     state.visible = [];
     state.typesPresent = [];
@@ -353,6 +660,11 @@
     state.selectedVisiblePos = -1;
     state.currentPayloadBytes = null;
     state.currentPayloadType = null;
+
+    els.headerPaneLabel.textContent = state.currentFileKind === "arc" ? "ARC Header" : "WARC Header";
+    els.searchInput.placeholder = state.currentFileKind === "arc"
+      ? "Search URI or domain…"
+      : "Search URI, domain, or Record-ID…";
 
     els.headerView.value = "";
     els.httpHeaderView.value = "";
@@ -370,9 +682,18 @@
 
     try {
       const t0 = performance.now();
-      const records = await indexWarcFile(file, (n) => {
+      const onProgress = (n) => {
         els.currentFileLabel.textContent = `Loading: ${displayName} (${n.toLocaleString()} records so far)`;
-      });
+      };
+
+      let records;
+      if (state.currentFileKind === "arc") {
+        const isGz = displayName.toLowerCase().endsWith(".gz");
+        const reader = new warcio.AsyncIterReader(file.stream(), isGz ? "gzip" : null);
+        records = await indexArcFile(reader, onProgress);
+      } else {
+        records = await indexWarcFile(file, onProgress);
+      }
       state.records = records;
 
       state.typesPresent = [...new Set(records.map((r) => r.type))].sort();
@@ -586,7 +907,9 @@
     state.currentPayloadType = null;
 
     try {
-      const detail = await loadRecordDetail(state.currentFile, rec);
+      const detail = state.currentFileKind === "arc"
+        ? await loadArcRecordDetail(rec)
+        : await loadRecordDetail(state.currentFile, rec);
       els.headerView.value = detail.headerText;
       els.httpHeaderView.value = detail.httpHeaderText;
       els.payloadView.value = detail.payloadText;

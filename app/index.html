@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <title>WARC Explorer</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Browse WARC files and records directly in your browser. No upload, no installation, no prior knowledge needed.">
+<meta name="description" content="Browse WARC and ARC files and records directly in your browser. No upload, no installation, no prior knowledge needed.">
 <meta property="og:title" content="WARC Explorer">
-<meta property="og:description" content="Browse WARC files and records directly in your browser. No upload, no installation, no prior knowledge needed.">
+<meta property="og:description" content="Browse WARC and ARC files and records directly in your browser. No upload, no installation, no prior knowledge needed.">
 <meta property="og:url" content="https://webdata.nb.no/warc-explorer">
 <meta property="og:type" content="website">
 <link rel="stylesheet" href="style.css">
@@ -14,11 +14,13 @@
 <body>
 
   <!-- WARC Explorer v.0.8.6
-  WARC Explorer is a single-page application for browsing WARC files and records entirely in the browser.
+  WARC Explorer is a single-page application for browsing WARC and ARC files and records entirely in the browser.
   No installation needed. All processing is done client-side, so no data leaves your machine.
   - index.html and style.css holds the GUI,
   - app.js reads and processes WARC with the help of warcio.min.js,
   a bundled version of WebRecorder's warcio.js (https://github.com/webrecorder/warcio.js).
+  ARC files (the older, pre-WARC container format) are parsed by a small hand-rolled
+  parser in app.js instead, since warcio.js itself has no ARC support.
 
   Source code available from https://www.github.com/NationalLibraryofNorway/webdata-warc-explorer.
   -->
@@ -26,7 +28,7 @@
 <div class="app">
 
   <div class="titlebar">
-  <div>WARC Explorer <span class="hint">— Browse WARC files and records in your browser. Only local processing, no data leaves your machine.</span></div>
+  <div>WARC Explorer <span class="hint">— Browse WARC and ARC files and records in your browser. Only local processing, no data leaves your machine.</span></div>
     <div class="titlebar-right hint">
       <a class="gh-link" href="https://github.com/NationalLibraryofNorway/webdata-warc-explorer"
         target="_blank" rel="noopener" title="See WARC Explorer source code on GitHub">
@@ -47,21 +49,21 @@
 
     <div class="pane" id="pane-files">
       <div class="pane-header">
-        <span>Select a WARC file</span>
+        <span>Select a WARC or ARC file</span>
         <div class="file-actions">
-          <button id="btnChooseFolder" title="Pick a folder to browse for .warc / .warc.gz files">📂 Choose folder…</button>
-          <button id="btnChooseFiles" title="Pick one or more .warc / .warc.gz files directly">🗃️ Choose files…</button>
+          <button id="btnChooseFolder" title="Pick a folder to browse for .warc / .warc.gz / .arc / .arc.gz files">📂 Choose folder…</button>
+          <button id="btnChooseFiles" title="Pick one or more .warc / .warc.gz / .arc / .arc.gz files directly">🗃️ Choose files…</button>
         </div>
       </div>
       <div class="tree" id="fileTree">
         <div class="empty-hint">
-          Click 📂 <b>Choose folder…</b> to browse a directory for WARC files, or
+          Click 📂 <b>Choose folder…</b> to browse a directory for WARC/ARC files, or
           🗃️<b>Choose files…</b> to pick specific files. You can also drag &amp; drop
-          .warc / .warc.gz files here.
+          .warc / .warc.gz / .arc / .arc.gz files here.
         </div>
       </div>
       <input type="file" id="folderInput" webkitdirectory multiple hidden>
-      <input type="file" id="filesInput" accept=".warc,.warc.gz,.gz" multiple hidden>
+      <input type="file" id="filesInput" accept=".warc,.warc.gz,.arc,.arc.gz,.gz" multiple hidden>
     </div>
 
     <div class="resizer" id="resizer1"></div>
@@ -85,7 +87,7 @@
     <div class="pane" id="pane-details">
       <div class="details-split">
         <div class="details-top">
-          <div class="pane-header"><span>WARC Header</span></div>
+          <div class="pane-header"><span id="headerPaneLabel">WARC Header</span></div>
           <textarea class="viewer" id="headerView" readonly placeholder="Select a record to see its WARC header…"></textarea>
         </div>
         <div class="details-resizer" id="resizer3"></div>
