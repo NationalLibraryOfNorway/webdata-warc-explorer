@@ -50,15 +50,17 @@ To inspect the headers and content of a resource, choose it from the centre pane
 
 All records with an HTTP payload ca be opened in a new tab in your browser, allowing you to represent it as a web resource.
 
-## Feedback
+## Feedback and contribution
 Please report bugs or problems by committing an issue, describing:
 - what you do,
 - what you expect to happen,
 - what actually happens.
 
-Please, add some contextual information about the WARC file and your browser version. If you know how to fix the problem, feel free to commit a pull requests related to the issue.
+Please, add some contextual information about the WARC file and your browser version.
 
-We also appreciate feedback and user-stories, which can be sent to webdata@nb.no.
+After issues are created, pull requests are also welcome, but please first create an issue to describe the problem and expected/desired behaviour.
+
+Feedback and user-stories can also be sent to webdata@nb.no.
 
 ## Credits
 WARC parsing is done with a bundled version of Webrecorder's [warcio.js](https://github.com/webrecorder/warcio.js).
