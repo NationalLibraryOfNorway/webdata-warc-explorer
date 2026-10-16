@@ -58,7 +58,7 @@ Please report bugs or problems by committing an issue, describing:
 
 Please, add some contextual information about the WARC file and your browser version.
 
-After issues are created, pull requests are also welcome, but please first create an issue to describe the problem and expected/desired behaviour. Also, read the [CONTRIBUTING.md](blob/main/contributing.md)
+After issues are created, pull requests are also welcome, but please first create an issue to describe the problem and expected/desired behaviour. Also, read the [CONTRIBUTING.md](contributing.md)
 
 Feedback and user-stories can also be sent to webdata@nb.no.
 
